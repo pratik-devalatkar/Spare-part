@@ -1,0 +1,25 @@
+<div class="container">
+  <h2>Add New Part</h2>
+
+  <form (ngSubmit)="onSubmit()">
+    <input type="text" placeholder="Part Name"
+           [(ngModel)]="part.partName"
+           name="partName" required>
+
+    <input type="number" placeholder="Current Quantity"
+           [(ngModel)]="part.quantity"
+           name="quantity" required>
+
+    <input type="number" placeholder="Minimum Stock Level"
+           [(ngModel)]="part.minimumLevel"
+           name="minimumLevel" required>
+
+    <input type="number" placeholder="Unit Price"
+           [(ngModel)]="part.unitPrice"
+           name="unitPrice" required>
+
+    <button type="submit">Add Part</button>
+  </form>
+
+  <p class="success" *ngIf="message">{{message}}</p>
+</div>
