@@ -2,18 +2,19 @@
   <h2>Add New Part</h2>
 
   <form (ngSubmit)="onSubmit()">
+    <label for="partName">Part Name</label>
     <input type="text" placeholder="Part Name"
            [(ngModel)]="part.partName"
            name="partName" required>
-
+    <label for="quantity">Current Quantity</label>
     <input type="number" placeholder="Current Quantity"
            [(ngModel)]="part.quantity"
            name="quantity" required>
-
+    <label for="minimumLevel">Minimum Stock Level</label>   
     <input type="number" placeholder="Minimum Stock Level"
            [(ngModel)]="part.minimumLevel"
            name="minimumLevel" required>
-
+    <label for="unitPrice">Unit Price</label>
     <input type="number" placeholder="Unit Price"
            [(ngModel)]="part.unitPrice"
            name="unitPrice" required>

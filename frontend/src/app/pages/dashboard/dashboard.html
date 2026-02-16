@@ -1,8 +1,10 @@
 <div class="container">
-
+<!-- <div *ngIf="loading" class="loading">
+  Loading data...
+</div> -->
   <h2>Inventory Dashboard</h2>
 
-  <!-- 🔹 DASHBOARD CARDS -->
+  <!-- DASHBOARD CARDS -->
   <div class="cards">
 
     <div class="card total">
@@ -23,7 +25,7 @@
   </div>
 
 
-  <!-- 🔹 INVENTORY TABLE -->
+  <!-- INVENTORY TABLE -->
   <h3>Inventory List</h3>
 
   <table *ngIf="parts.length > 0; else noData">
@@ -59,7 +61,7 @@
   </ng-template>
 
 
-  <!-- 🔹 STOCK HISTORY -->
+  <!--  STOCK HISTORY -->
   <h3>Recent Stock Movements</h3>
 
   <table *ngIf="history.length > 0">

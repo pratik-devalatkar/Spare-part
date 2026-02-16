@@ -23,7 +23,7 @@ export class DashboardComponent implements OnInit {
     this.loadData();
   }
 
-  // 🔹 Load all required data
+  // Load all required data
   loadData(): void {
     this.loading = true;
 
@@ -61,12 +61,12 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  // 🔹 Check if part is low stock
+  //  Check if part is low stock
   isLowStock(part: any): boolean {
     return part.quantity < part.minimumLevel;
   }
 
-  // 🔹 Add Stock
+  //  Add Stock
   addStock(part: any): void {
     const qty = prompt("Enter quantity to add:");
 
@@ -86,7 +86,7 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  // 🔹 Remove Stock
+  // Remove Stock
   removeStock(part: any): void {
     const qty = prompt("Enter quantity to remove:");
     const reason = prompt("Reason (Used in Service / Damaged / Sold / Other):");
