@@ -20,3 +20,12 @@ exports.addPart = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+// Get All Parts
+exports.getAllParts = async (req, res) => {
+  try {
+    const parts = await Part.find();
+    res.json(parts);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+}
