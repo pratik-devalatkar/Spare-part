@@ -2,6 +2,9 @@ import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PartService } from '../../services/part';
+import { Router, NavigationEnd } from '@angular/router';
+import { filter } from 'rxjs/operators';
+import { forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-dashboard',
@@ -11,7 +14,7 @@ import { PartService } from '../../services/part';
   styleUrl: './dashboard.css'
 })
 export class DashboardComponent implements OnInit {
-
+  isLoading: boolean = true;
   parts: any[] = [];
   dashboard: any = {};
   history: any[] = [];
@@ -32,23 +35,57 @@ export class DashboardComponent implements OnInit {
   toastType: 'success' | 'error' = 'success';
   showToast: boolean = false;
 
-  constructor(
-    private partService: PartService,
-    private cdr: ChangeDetectorRef
-  ) { }
-
+  // constructor(
+  //   private partService: PartService,
+  //   private cdr: ChangeDetectorRef
+  // ) { }
+constructor(
+  private partService: PartService,
+  private cdr: ChangeDetectorRef,
+  private router: Router
+) {
+  // Reload data on route navigation
+  this.router.events
+    .pipe(filter(event => event instanceof NavigationEnd))
+    .subscribe(() => {
+      this.loadData();
+    });
+}
 
   ngOnInit(): void {
-    this.loadData();
-  }
+  this.loadData();
+}
 
-  // Load all dashboard data
+//isLoading: boolean = true;
+  //Load all dashboard data
+  // loadData(): void {
+  //   this.partService.getAllParts().subscribe(data => this.parts = data);
+  //   this.partService.getDashboard().subscribe(data => this.dashboard = data);
+  //   this.partService.getHistory().subscribe(data => this.history = data);
+  // }
   loadData(): void {
-    this.partService.getAllParts().subscribe(data => this.parts = data);
-    this.partService.getDashboard().subscribe(data => this.dashboard = data);
-    this.partService.getHistory().subscribe(data => this.history = data);
-  }
-
+  this.isLoading = true;
+  
+  forkJoin({
+    parts: this.partService.getAllParts(),
+    dashboard: this.partService.getDashboard(),
+    history: this.partService.getHistory()
+  }).subscribe({
+    next: (results) => {
+      this.parts = results.parts || [];
+      this.dashboard = results.dashboard || {};
+      this.history = results.history || [];
+      this.isLoading = false;
+      this.cdr.detectChanges(); // Force change detection
+    },
+    error: (error) => {
+      console.error('Error loading dashboard data:', error);
+      this.isLoading = false;
+      this.cdr.detectChanges();
+    }
+  });
+}
+  
   // Low stock check
   isLowStock(part: any): boolean {
     return part.quantity < part.minimumLevel;

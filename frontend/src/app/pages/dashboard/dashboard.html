@@ -1,121 +1,126 @@
 <div class="container">
-    <!-- <div *ngIf="loading" class="loading">
-  Loading data...
-</div> -->
     <h2>Inventory Dashboard</h2>
 
-    <!-- DASHBOARD CARDS -->
-    <div class="cards">
-
-        <div class="card total">
-            <h3>Total Parts</h3>
-            <p>{{ dashboard?.totalParts || 0 }}</p>
-        </div>
-
-        <div class="card low">
-            <h3>Low Stock Items</h3>
-            <p>{{ dashboard?.lowStockItems || 0 }}</p>
-        </div>
-
-        <div class="card value">
-            <h3>Total Inventory Value</h3>
-            <p>₹ {{ dashboard?.totalInventoryValue || 0 }}</p>
-        </div>
-
+    <!-- LOADING INDICATOR -->
+    <div *ngIf="isLoading" class="loading-container">
+        <div class="spinner"></div>
+        <p>Loading dashboard data...</p>
     </div>
 
+    <!-- DASHBOARD CONTENT - Only show when not loading -->
+    <div *ngIf="!isLoading">
+        <div class="cards">
 
-    <!-- INVENTORY TABLE -->
-    <h3>Inventory List</h3>
-
-    <table *ngIf="parts.length > 0; else noData">
-        <thead>
-            <tr>
-                <th>Part Name</th>
-                <th>Quantity</th>
-                <th>Minimum Level</th>
-                <th>Unit Price</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-
-        <tbody>
-            <tr *ngFor="let part of parts" [class.low-stock]="isLowStock(part)">
-
-                <td>{{ part.partName }}</td>
-                <td>{{ part.quantity }}</td>
-                <td>{{ part.minimumLevel }}</td>
-                <td>₹ {{ part.unitPrice }}</td>
-
-                <td>
-                    <button (click)="openModal(part, 'add')">Add Stock</button>
-                    <button (click)="openModal(part, 'remove')">Remove Stock</button>
-                </td>
-            </tr>
-        </tbody>
-    </table>
-    <!-- Modal -->
-    <div class="modal-overlay" *ngIf="showModal">
-        <div class="modal">
-
-            <h3>
-                {{ actionType === 'add' ? 'Add Stock' : 'Remove Stock' }}
-            </h3>
-
-            <input type="number" placeholder="Enter Quantity" [(ngModel)]="stockQuantity">
-
-            <div *ngIf="actionType === 'remove'">
-                <select [(ngModel)]="removeReason">
-                    <option value="">Select Reason</option>
-                    <option value="Used in Service">Used in Service</option>
-                    <option value="Damaged">Damaged</option>
-                    <option value="Sold">Sold</option>
-                    <option value="Other">Other</option>
-                </select>
+            <div class="card total">
+                <h3>Total Parts</h3>
+                <p>{{ dashboard?.totalParts || 0 }}</p>
             </div>
 
-            <div class="modal-buttons">
-                <button class="confirm" (click)="submitStockAction()" [disabled]="isSubmitting">
-                    {{ isSubmitting ? 'Processing...' : 'Submit' }}
-                </button>
-                <button class="cancel" (click)="closeModal()">Cancel</button>
+            <div class="card low">
+                <h3>Low Stock Items</h3>
+                <p>{{ dashboard?.lowStockItems || 0 }}</p>
+            </div>
+
+            <div class="card value">
+                <h3>Total Inventory Value</h3>
+                <p>₹ {{ dashboard?.totalInventoryValue || 0 }}</p>
             </div>
 
         </div>
+
+
+        <!-- INVENTORY TABLE -->
+        <h3>Inventory List</h3>
+
+        <table *ngIf="parts.length > 0; else noData">
+            <thead>
+                <tr>
+                    <th>Part Name</th>
+                    <th>Quantity</th>
+                    <th>Minimum Level</th>
+                    <th>Unit Price</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                <tr *ngFor="let part of parts" [class.low-stock]="isLowStock(part)">
+
+                    <td>{{ part.partName }}</td>
+                    <td>{{ part.quantity }}</td>
+                    <td>{{ part.minimumLevel }}</td>
+                    <td>₹ {{ part.unitPrice }}</td>
+
+                    <td>
+                        <button (click)="openModal(part, 'add')">Add Stock</button>
+                        <button (click)="openModal(part, 'remove')">Remove Stock</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <!-- Modal -->
+        <div class="modal-overlay" *ngIf="showModal">
+            <div class="modal">
+
+                <h3>
+                    {{ actionType === 'add' ? 'Add Stock' : 'Remove Stock' }}
+                </h3>
+
+                <input type="number" placeholder="Enter Quantity" [(ngModel)]="stockQuantity">
+
+                <div *ngIf="actionType === 'remove'">
+                    <select [(ngModel)]="removeReason">
+                        <option value="">Select Reason</option>
+                        <option value="Used in Service">Used in Service</option>
+                        <option value="Damaged">Damaged</option>
+                        <option value="Sold">Sold</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+
+                <div class="modal-buttons">
+                    <button class="confirm" (click)="submitStockAction()" [disabled]="isSubmitting">
+                        {{ isSubmitting ? 'Processing...' : 'Submit' }}
+                    </button>
+                    <button class="cancel" (click)="closeModal()">Cancel</button>
+                </div>
+
+            </div>
+        </div>
+        <!-- Toast -->
+        <div *ngIf="showToast" class="toast" [ngClass]="toastType">
+            {{ toastMessage }}
+        </div>
+
+        <ng-template #noData>
+            <p>No parts available.</p>
+        </ng-template>
+
+
+        <!--  STOCK HISTORY -->
+        <h3>Recent Stock Movements</h3>
+
+        <table *ngIf="history.length > 0">
+            <thead>
+                <tr>
+                    <th>Part</th>
+                    <th>Action</th>
+                    <th>Quantity</th>
+                    <th>Reason</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                <tr *ngFor="let h of history">
+                    <td>{{ h.part?.partName }}</td>
+                    <td>{{ h.action }}</td>
+                    <td>{{ h.quantity }}</td>
+                    <td>{{ h.reason }}</td>
+                    <td>{{ h.createdAt | date:'short' }}</td>
+                </tr>
+            </tbody>
+        </table>
+
     </div>
-    <!-- Toast -->
-    <div *ngIf="showToast" class="toast" [ngClass]="toastType">
-        {{ toastMessage }}
-    </div>
-
-    <ng-template #noData>
-        <p>No parts available.</p>
-    </ng-template>
-
-
-    <!--  STOCK HISTORY -->
-    <h3>Recent Stock Movements</h3>
-
-    <table *ngIf="history.length > 0">
-        <thead>
-            <tr>
-                <th>Part</th>
-                <th>Action</th>
-                <th>Quantity</th>
-                <th>Reason</th>
-                <th>Date</th>
-            </tr>
-        </thead>
-
-        <tbody>
-            <tr *ngFor="let h of history">
-                <td>{{ h.part?.partName }}</td>
-                <td>{{ h.action }}</td>
-                <td>{{ h.quantity }}</td>
-                <td>{{ h.reason }}</td>
-                <td>{{ h.createdAt | date:'short' }}</td>
-            </tr>
-        </tbody>
-    </table>
-
 </div>
