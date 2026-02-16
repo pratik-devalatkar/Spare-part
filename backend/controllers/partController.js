@@ -21,6 +21,7 @@ exports.addPart = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
 // Get All Parts
 exports.getAllParts = async (req, res) => {
   try {
@@ -30,6 +31,7 @@ exports.getAllParts = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 }
+
 // Add Stock
 exports.addStock = async (req, res) => {
   try {
@@ -54,7 +56,6 @@ exports.addStock = async (req, res) => {
   }
 };
 
-
 // Remove Stock
 exports.removeStock = async (req, res) => {
   try {
@@ -78,6 +79,49 @@ exports.removeStock = async (req, res) => {
     });
 
     res.json({ message: "Stock removed", part });
+
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+//Dashboard Stats
+exports.getDashboardStats = async (req, res) => {
+  try {
+    const parts = await Part.find();
+
+    const totalParts = parts.length;
+
+    const lowStockItems = parts.filter(
+      part => part.quantity < part.minimumLevel
+    ).length;
+
+    const totalInventoryValue = parts.reduce(
+      (sum, part) => sum + (part.quantity * part.unitPrice),
+      0
+    );
+
+    res.json({
+      totalParts,
+      lowStockItems,
+      totalInventoryValue
+    });
+
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Get Stock Movement History
+exports.getStockHistory = async (req, res) => {
+  try {
+    const history = await StockMovement
+      .find()
+      .populate("part", "partName")
+      .sort({ createdAt: -1 })
+      .limit(10);
+
+    res.json(history);
 
   } catch (error) {
     res.status(500).json({ error: error.message });
