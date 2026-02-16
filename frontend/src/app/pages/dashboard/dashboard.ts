@@ -1,11 +1,12 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { PartService } from '../../services/part';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css'
 })
@@ -14,99 +15,142 @@ export class DashboardComponent implements OnInit {
   parts: any[] = [];
   dashboard: any = {};
   history: any[] = [];
-  loading: boolean = false;
-  errorMessage: string = '';
 
-  constructor(private partService: PartService) {}
+  // Modal control
+  showModal: boolean = false;
+  selectedPart: any = null;
+  actionType: 'add' | 'remove' = 'add';
+
+  stockQuantity: number = 0;
+  removeReason: string = '';
+
+  // Button loading state
+  isSubmitting: boolean = false;
+
+  // Toast
+  toastMessage: string = '';
+  toastType: 'success' | 'error' = 'success';
+  showToast: boolean = false;
+
+  constructor(
+    private partService: PartService,
+    private cdr: ChangeDetectorRef
+  ) { }
+
 
   ngOnInit(): void {
     this.loadData();
   }
 
-  // Load all required data
+  // Load all dashboard data
   loadData(): void {
-    this.loading = true;
-
-    // Get all parts
-    this.partService.getAllParts().subscribe({
-      next: (data) => {
-        this.parts = data;
-      },
-      error: (err) => {
-        console.error(err);
-        this.errorMessage = "Error loading parts";
-      }
-    });
-
-    // Get dashboard stats
-    this.partService.getDashboard().subscribe({
-      next: (data) => {
-        this.dashboard = data;
-      },
-      error: (err) => {
-        console.error(err);
-      }
-    });
-
-    // Get stock history
-    this.partService.getHistory().subscribe({
-      next: (data) => {
-        this.history = data;
-        this.loading = false;
-      },
-      error: (err) => {
-        console.error(err);
-        this.loading = false;
-      }
-    });
+    this.partService.getAllParts().subscribe(data => this.parts = data);
+    this.partService.getDashboard().subscribe(data => this.dashboard = data);
+    this.partService.getHistory().subscribe(data => this.history = data);
   }
 
-  //  Check if part is low stock
+  // Low stock check
   isLowStock(part: any): boolean {
     return part.quantity < part.minimumLevel;
   }
 
-  //  Add Stock
-  addStock(part: any): void {
-    const qty = prompt("Enter quantity to add:");
+  // Open modal
+  openModal(part: any, type: 'add' | 'remove'): void {
+    this.selectedPart = part;
+    this.actionType = type;
+    this.stockQuantity = 0;
+    this.removeReason = '';
+    this.showModal = true;
+  }
 
-    if (!qty || Number(qty) <= 0) {
-      alert("Invalid quantity");
+  // Close modal
+  closeModal(): void {
+  this.showModal = false;
+  this.isSubmitting = false;
+  this.cdr.detectChanges();  
+}
+
+  // Main submit function
+  submitStockAction(): void {
+
+    if (this.stockQuantity <= 0) {
+      this.showToastMessage("Invalid quantity", "error");
       return;
     }
 
-    this.partService.addStock(part._id, Number(qty)).subscribe({
+    if (this.actionType === 'add') {
+      this.handleAddStock();
+    }
+
+    if (this.actionType === 'remove') {
+      this.handleRemoveStock();
+    }
+  }
+
+  // Add stock handler
+  handleAddStock(): void {
+
+    this.isSubmitting = true;
+
+    this.partService.addStock(this.selectedPart._id, this.stockQuantity)
+      .subscribe({
+        next: () => {
+          this.showToastMessage("Stock Added Successfully", "success");
+          this.closeModal();
+          this.loadData();
+        },
+        error: (err) => {
+          this.showToastMessage(
+            err.error?.message || "Error Adding Stock",
+            "error"
+          );
+          this.isSubmitting = false;
+        }
+      });
+  }
+
+  // Remove stock handler
+  handleRemoveStock(): void {
+
+    if (!this.removeReason) {
+      this.showToastMessage("Select reason", "error");
+      return;
+    }
+
+    this.isSubmitting = true;
+
+    this.partService.removeStock(this.selectedPart._id, {
+      quantity: this.stockQuantity,
+      reason: this.removeReason
+    }).subscribe({
       next: () => {
-        this.loadData(); // refresh data
+        this.showToastMessage("Stock Removed Successfully", "success");
+        this.isSubmitting = false;
+        this.closeModal();
+        this.loadData();
       },
       error: (err) => {
-        console.error(err);
-        alert("Error adding stock");
+        this.showToastMessage(
+          err.error?.message || "Not enough stock",
+          "error"
+        );
+
+        this.isSubmitting = false;
+
+        this.cdr.detectChanges();
       }
     });
   }
 
-  // Remove Stock
-  removeStock(part: any): void {
-    const qty = prompt("Enter quantity to remove:");
-    const reason = prompt("Reason (Used in Service / Damaged / Sold / Other):");
 
-    if (!qty || Number(qty) <= 0 || !reason) {
-      alert("Invalid input");
-      return;
-    }
+  // Toast display
+  showToastMessage(message: string, type: 'success' | 'error'): void {
+    this.toastMessage = message;
+    this.toastType = type;
+    this.showToast = true;
 
-    this.partService.removeStock(part._id, {
-      quantity: Number(qty),
-      reason: reason
-    }).subscribe({
-      next: () => {
-        this.loadData(); // refresh data
-      },
-      error: (err) => {
-        console.error(err);
-        alert("Error removing stock");
-      }
-    });
+    setTimeout(() => {
+      this.showToast = false;
+    }, 3000);
   }
 }
