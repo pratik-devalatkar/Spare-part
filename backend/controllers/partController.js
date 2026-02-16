@@ -1,4 +1,5 @@
 const Part = require("../models/Part");
+const StockMovement = require("../models/stockMovement");
 
 // Add New Part
 exports.addPart = async (req, res) => {
@@ -29,3 +30,56 @@ exports.getAllParts = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 }
+// Add Stock
+exports.addStock = async (req, res) => {
+  try {
+    const { quantity } = req.body;
+    const part = await Part.findById(req.params.id);
+
+    if (!part) return res.status(404).json({ message: "Part not found" });
+
+    part.quantity += quantity;
+    await part.save();
+
+    await StockMovement.create({
+      part: part._id,
+      action: "Added",
+      quantity
+    });
+
+    res.json({ message: "Stock added", part });
+
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+
+// Remove Stock
+exports.removeStock = async (req, res) => {
+  try {
+    const { quantity, reason } = req.body;
+    const part = await Part.findById(req.params.id);
+
+    if (!part) return res.status(404).json({ message: "Part not found" });
+
+    if (part.quantity < quantity) {
+      return res.status(400).json({ message: "Not enough stock" });
+    }
+
+    part.quantity -= quantity;
+    await part.save();
+
+    await StockMovement.create({
+      part: part._id,
+      action: "Removed",
+      quantity,
+      reason
+    });
+
+    res.json({ message: "Stock removed", part });
+
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
