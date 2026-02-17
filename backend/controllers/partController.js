@@ -1,5 +1,5 @@
 const Part = require("../models/Part");
-const StockMovement = require("../models/stockMovement");
+const StockMovement = require("../models/StockMovement");
 
 // Add New Part
 exports.addPart = async (req, res) => {
